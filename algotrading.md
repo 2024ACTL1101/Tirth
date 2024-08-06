@@ -1,5 +1,11 @@
 ---
-
+title: "ACTL1101 Assignment Part A"
+author: "Tirth Thakker"
+date: "2024 T2"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -113,7 +119,7 @@ Run_Trades <- function(){
 ## Step 3: Customize Trading Period
 - Define a trading period you wanted in the past five years 
 ```{r period}
-#setting start and end dates 
+
 start_date = as.Date('2021-01-01')
 end_date = as.Date('2021-12-31')
 #creating the data frame for the modified period
@@ -134,7 +140,7 @@ After running your algorithm, check if the trades were executed as expected. Cal
 
 ```{r}
 
-#Calculating profit
+
 profit <- round(sum(amd_df$costs_proceeds),2)
 #cost for this algorithm is simply profit minus the last entry in the costs_proceeds column
 total_cost <- profit - amd_df$costs_proceeds[nrow(amd_df)]
@@ -154,12 +160,13 @@ paste('The ROI from this strategy was ', as.character(ROI),'%', sep = '')
 ```{r option}
 
 
-#initialize values for total costs and average price 
-#they have been set to the price and cost of the first day, to not trigger any 
-#immediate sell operation 
+
 average_price <- amd_df$close[1]
 total_invested <- amd_df$close[1]*100 
 shares_sold <- 0
+#initialize values for total costs and average price 
+#they have been set to the price and cost of the first day, to not trigger any 
+#immediate sell operation 
 for (k in 2:nrow(amd_df)) {
   #first condition checks for the current price being 15% higher than average.
   #second condition is so that after shares hit 0, the next buy operation does not
@@ -227,6 +234,7 @@ paste('The profit from the strategy was $', Strategy_profit, sep='')
 paste('The total investment made to buy shares was $',round(-strat_total_cost,2), sep = '')
 Strat_ROI <- round((Strategy_profit/-strat_total_cost)*100, 2)
 paste('The ROI for this strategy was ',Strat_ROI,'%', sep = '')
+
 ```
 
 
