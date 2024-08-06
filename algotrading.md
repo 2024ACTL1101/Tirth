@@ -1,3 +1,16 @@
+---
+title: "ACTL1101 Assignment Part A"
+author: "Tirth Thakker"
+date: "2024 T2"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, tidy.opts=list(width.cutoff=90),tidy=TRUE)
+```
 
 ## Algorithmic Trading Strategy
 
@@ -32,22 +45,27 @@ After meeting with the Trading Strategies Team, you were asked to include costs,
 
 Start by running the provided code cells in the "Data Loading" section to generate a DataFrame containing AMD stock closing data. This will serve as the basis for your trading decisions. First, create a data frame named `amd_df` with the given closing prices and corresponding dates. 
 
-```r
+```{r load-data}
+
 # Load data from CSV file
 amd_df <- read.csv("AMD.csv")
+
 # Convert the date column to Date type and Adjusted Close as numeric
 amd_df$date <- as.Date(amd_df$Date)
 amd_df$close <- as.numeric(amd_df$Adj.Close)
+
 amd_df <- amd_df[, c("date", "close")]
 ```
 
-#### Plotting the Data
+
+##Plotting the Data
 Plot the closing prices over time to visualize the price movement.
-```r
+```{r plot}
 plot(amd_df$date, amd_df$close,'l')
 ```
 
-### Step 2: Trading Algorithm
+
+## Step 2: Trading Algorithm
 Implement the trading algorithm as per the instructions. You should initialize necessary variables, and loop through the dataframe to execute trades based on the set conditions.
 
 - Initialize Columns: Start by ensuring dataframe has columns 'trade_type', 'costs_proceeds' and 'accumulated_shares'.
@@ -59,61 +77,186 @@ Implement the trading algorithm as per the instructions. You should initialize n
 
 
 
-```r
+```{r trading}
 # Initialize columns for trade type, cost/proceeds, and accumulated shares in amd_df
 amd_df$trade_type <- NA
 amd_df$costs_proceeds <- NA  # Corrected column name
 amd_df$accumulated_shares <- 0  # Initialize if needed for tracking
 
-# Initialize variables for trading logic
+##Step 2 has been turned into the function Run_Trades, this is to allow for the 
+##same code to be used again in step 3 when the trading period is being modified
 previous_price <- 0
 share_size <- 100
 accumulated_shares <- 0
+Run_Trades <- function(){
+  # Initialize variables for trading logic
 
-for (i in 1:nrow(amd_df)) {
-# Fill your code here
+  
+  for (i in 1:nrow(amd_df)) {
+
+    #Assigning whether to buy, sell or do nothing
+    if (previous_price > amd_df$close[i] || previous_price == 0) {amd_df$trade_type[i] <- "buy"}
+    #ensuring that columns do not have any N/A values 
+    else {amd_df$trade_type[i] <- ""; amd_df$costs_proceeds[i] <- 0}
+    #changing last row to a 'sell' row 
+    if(i == nrow(amd_df)){amd_df$trade_type[i] <- "sell"}
+    #checking whether to buy or sell, and updating columns accordingly.  
+    if (amd_df$trade_type[i] == "buy") 
+    {amd_df$costs_proceeds[i] <- amd_df$close[i]*-100; accumulated_shares <-
+       accumulated_shares + 100}
+    else if (amd_df$trade_type[i] == "sell")
+    {amd_df$costs_proceeds[i] <- accumulated_shares*amd_df$close[i]}
+    amd_df$accumulated_shares[i] <- accumulated_shares
+    #resetting previous price for next iteration 
+    previous_price <- amd_df$close[i]
+    
+  }
+  return(amd_df)
 }
 ```
 
 
-### Step 3: Customize Trading Period
+## Step 3: Customize Trading Period
 - Define a trading period you wanted in the past five years 
-```r
-# Fill your code here
+```{r period}
+#setting start and end dates 
+start_date = as.Date('2021-01-01')
+end_date = as.Date('2021-12-31')
+#creating the data frame for the modified period
+amd_df = subset(amd_df, amd_df$date >= start_date & amd_df$date <= end_date)
+#Running the trades for the new period 
+amd_df <- Run_Trades()
+
+
 ```
 
 
-### Step 4: Run Your Algorithm and Analyze Results
+## Step 4: Run Your Algorithm and Analyze Results
 After running your algorithm, check if the trades were executed as expected. Calculate the total profit or loss and ROI from the trades.
 
 - Total Profit/Loss Calculation: Calculate the total profit or loss from your trades. This should be the sum of all entries in the 'costs_proceeds' column of your dataframe. This column records the financial impact of each trade, reflecting money spent on buys as negative values and money gained from sells as positive values.
 - Invested Capital: Calculate the total capital invested. This is equal to the sum of the 'costs_proceeds' values for all 'buy' transactions. Since these entries are negative (representing money spent), you should take the negative sum of these values to reflect the total amount invested.
 - ROI Formula: $$\text{ROI} = \left( \frac{\text{Total Profit or Loss}}{\text{Total Capital Invested}} \right) \times 100$$
 
-```r
-# Fill your code here
+```{r}
+
+#Calculating profit
+profit <- round(sum(amd_df$costs_proceeds),2)
+#cost for this algorithm is simply profit minus the last entry in the costs_proceeds column
+total_cost <- profit - amd_df$costs_proceeds[nrow(amd_df)]
+ROI <- round((profit/-total_cost)*100,2)
+#paste statements have been used to allow for dynamic outputs 
+paste('The profit earned by this strategy was $', as.character(profit), sep ='' )
+paste('The total investment in buying the shares was $',round(-total_cost,2), sep = '')
+paste('The ROI from this strategy was ', as.character(ROI),'%', sep = '')
+
 ```
 
-### Step 5: Profit-Taking Strategy or Stop-Loss Mechanisum (Choose 1)
+## Step 5: Profit-Taking Strategy or Stop-Loss Mechanisum (Choose 1)
 - Option 1: Implement a profit-taking strategy that you sell half of your holdings if the price has increased by a certain percentage (e.g., 20%) from the average purchase price.
 - Option 2: Implement a stop-loss mechanism in the trading strategy that you sell half of your holdings if the stock falls by a certain percentage (e.g., 20%) from the average purchase price. You don't need to buy 100 stocks on the days that the stop-loss mechanism is triggered.
 
 
-```r
-# Fill your code here
+```{r option}
+
+
+#initialize values for total costs and average price 
+#they have been set to the price and cost of the first day, to not trigger any 
+#immediate sell operation 
+average_price <- amd_df$close[1]
+total_invested <- amd_df$close[1]*100 
+shares_sold <- 0
+for (k in 2:nrow(amd_df)) {
+  #first condition checks for the current price being 15% higher than average.
+  #second condition is so that after shares hit 0, the next buy operation does not
+  #trigger an immediate sale (i.e we do not buy and sell immediately on the same day).
+  #third condition is to ensure we do not sell when we have no shares.
+  if
+  (amd_df$close[k] >= 1.15*average_price && amd_df$accumulated_shares[k-1]!= 0 
+   && amd_df$accumulated_shares[k] > 0){
+    #the following if statement over-writes the buy operation in case of a sale
+    if(amd_df$trade_type[k] == "buy"){
+      #the loop removes the 100 shares previously bought from all subsequent
+      #accumulated shares values 
+      for (m in k:nrow(amd_df)){
+        amd_df$accumulated_shares[m] <- amd_df$accumulated_shares[m] - share_size
+      }
+
+    }
+    #perform the sale operation, if statement ensures we do not sell less than 1 share
+    amd_df$trade_type[k] <- "sell"
+    if (amd_df$accumulated_shares[k] > 1){
+      #floor function used to ensure we sell an integer number of shares 
+      shares_sold <- floor(0.5*amd_df$accumulated_shares[k])
+      #removing the amount invested in the sold shares so that the money invested in sold shares
+      #does not affect future average prices 
+      total_invested <- total_invested - shares_sold*average_price
+    }
+    else{
+      #when we have 1 share only that share is sold 
+      shares_sold <- amd_df$accumulated_shares[k]
+      #total invested is reset to 0, so that after all shares are sold, previous purchases 
+      #do not affect average price when new purchases are made.
+      total_invested <- 0 
+    }
+    
+    amd_df$costs_proceeds[k] <- shares_sold*amd_df$close[k]
+    #loop updates accumulated_shares in subsequent rows to reflect the sale 
+    for(c in k:nrow(amd_df)){
+      amd_df$accumulated_shares[c] <- amd_df$accumulated_shares[c] - shares_sold
+    }
+    #reset shares_sold for the next iteration
+    shares_sold <- 0
+  }
+  #the following is used to update the average price every time we buy shares 
+  if(amd_df$trade_type[k] == "buy"){
+    total_invested <- total_invested + share_size*amd_df$close[k]
+    average_price <- total_invested/amd_df$accumulated_shares[k]
+  }
+  #making the sale on the last day,and updating the row to reflect the new, lower 
+  #number of shares sold on the last day compared to the last algorithm. 
+  if(k == nrow(amd_df)){
+    amd_df$costs_proceeds[k] <- amd_df$close[k]*amd_df$accumulated_shares[k] 
+  }
+
+}
+#adding up all the negative values in the costs_proceeds column
+strat_total_cost <- 0 
+for (l in 1:nrow(amd_df)){
+  if(amd_df$costs_proceeds[l] < 0){
+    strat_total_cost<- strat_total_cost + amd_df$costs_proceeds[l]
+  }
+}
+#calculation and output of results. 
+Strategy_profit <- round(sum(amd_df$costs_proceeds),2)
+paste('The profit from the strategy was $', Strategy_profit, sep='')
+paste('The total investment made to buy shares was $',round(-strat_total_cost,2), sep = '')
+Strat_ROI <- round((Strategy_profit/-strat_total_cost)*100, 2)
+paste('The ROI for this strategy was ',Strat_ROI,'%', sep = '')
 ```
 
 
-### Step 6: Summarize Your Findings
+## Step 6: Summarize Your Findings
 - Did your P/L and ROI improve over your chosen period?
 - Relate your results to a relevant market event and explain why these outcomes may have occurred.
 
 
-```r
-# Fill your code here and Disucss
+```{r}
 ```
+As a result of using the profit taking strategy where we sold shares after a 15% increase on the average price the profit declined from  538,758.93 dollars to 169189.15 dollars, while ROI dropped from 43.25% to 15.23%. 
+The main reason for this drop in ROI is that while costs dropped to 1,111,161 from 1,245,601 dollars, when using the strategy, profits dropped by a higher percentage, decreasing ROI. 
 
-Sample Discussion: On Wednesday, December 6, 2023, AMD CEO Lisa Su discussed a new graphics processor designed for AI servers, with Microsoft and Meta as committed users. The rise in AMD shares on the following Thursday suggests that investors believe in the chipmaker's upward potential and market expectations; My first strategy earned X dollars more than second strategy on this day, therefore providing a better ROI.
+The primary reason for this decrease in profit is a market event that occurred near the end of our chosen trading period. On 8th November 2021, AMD announced that they had acquired Meta Platforms Inc as a customer for data center chips. This news led to increased consumer confidence, and AMD shares, which closed at 136.64 on the previous Friday, rose in price and closed at 150.16. AMD shares continued strong for the rest of the year, closing at 143.90 on 31/12/21.
+
+However, when using the profit-taking strategy, we had sold a majority of our holdings previously at cheaper prices (as targets had already been hit), and hence we could not take full advantage of this sudden increase in price (only 68 shares were owned on 8th November)
+
+In the previous, more basic strategy, since all shares were sold at the end of the year, the shares were sold at a relatively higher price leading to higher profits and ROI. 
+
+It is important to note, that while the profit-taking strategy earned lower profits and had a lower ROI, it was also significantly less risky. Had the price reduced instead of going up the profit taking strategy would have minimized losses.
+
+Alternatively, choosing a higher mark-up percentage, may have also improved the ROI of the profit-taking strategy in this case, given that AMD finished the year so strongly. 
+
+
 
 
 
