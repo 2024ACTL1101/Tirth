@@ -32,7 +32,8 @@ The CAPM provides a framework to understand the relationship between systematic 
 - `quantmod` stands for "Quantitative Financial Modelling Framework". It was developed to aid the quantitative trader in the development, testing, and deployment of statistically based trading models.
 - Make sure to install the `quantmod` package by running `install.packages("quantmod")` in the R console before proceeding.
 
-```{r load-data}
+```
+{r load-data}
 # Set start and end dates
 start_date <- as.Date("2019-05-20")
 end_date <- as.Date("2024-05-20")
@@ -53,7 +54,8 @@ df <- merge(df, rf_df, by = "Date")
 ```
 
 #### Data Processing 
-```{r data}
+```
+{r data}
 colSums(is.na(df))
 # Fill N/A RF data
 df <- df %>%
@@ -85,7 +87,8 @@ $$
 \text{Daily Return} = \frac{\text{Today's Price} - \text{Previous Trading Day's Price}}{\text{Previous Trading Day's Price}}
 $$
 
-```{r return}
+```
+{r return}
 #adding colums for amd and gspc returns 
 df <- df %>%
   mutate(amd_returns = NA)
@@ -104,7 +107,8 @@ $$
 \text{Daily Risk-Free Rate} = \left(1 + \frac{\text{Annual Rate}}{100}\right)^{\frac{1}{360}} - 1
 $$
 
-```{r riskfree}
+```
+{r riskfree}
 #converting annual rates in the data frame to daily rates 
 for (j in 1:nrow(df)){ 
   df$RF[j] <- (1+ df$RF[j]/100)^(1/360) -1
@@ -115,7 +119,8 @@ for (j in 1:nrow(df)){
 
 - **Calculate Excess Returns**: Compute the excess returns for AMD and the S&P 500 by subtracting the daily risk-free rate from their respective returns.
 
-```{r excess return}
+```
+{r excess return}
 #adding columns for excess amd and gspc returns
 df <- df %>% 
   mutate(amd_excess_returns = NA)
@@ -132,7 +137,8 @@ for (m in 2:nrow(df)){
 
 - **Perform Regression Analysis**: Using linear regression, we estimate the beta (\(\beta\)) of AMD relative to the S&P 500. Here, the dependent variable is the excess return of AMD, and the independent variable is the excess return of the S&P 500. Beta measures the sensitivity of the stock's returns to fluctuations in the market.
 
-```{r lm}
+```
+{r lm}
 #removing na values (first row)
 df = na.omit(df)
 #performing linear regression 
@@ -158,7 +164,8 @@ This suggests that there is a higher risk to investing in AMD, in the case that 
 #### Plotting the CAPM Line
 Plot the scatter plot of AMD vs. S&P 500 excess returns and add the CAPM regression line.
 
-```{r plot}
+```
+{r plot}
 #defining plot as a ggplot object
 plot <- ggplot(df, aes(x = gspc_excess_returns, y = amd_excess_returns))+
   #adding points
@@ -178,7 +185,8 @@ Suppose the current risk-free rate is 5.0%, and the annual expected return for t
 
 **Answer:**
 
-```{r pi}
+```
+{r pi}
 #fill the code
 n <- length(df$gspc_excess_returns)
 gspc_expected<- 13.3/100
