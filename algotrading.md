@@ -76,7 +76,8 @@ Implement the trading algorithm as per the instructions. You should initialize n
 
 
 
-```{r trading}
+```
+{r trading}
 
 # Initialize columns for trade type, cost/proceeds, and accumulated shares in amd_df
 amd_df$trade_type <- NA
@@ -118,7 +119,8 @@ Run_Trades <- function(){
 
 ## Step 3: Customize Trading Period
 - Define a trading period you wanted in the past five years 
-```{r period}
+```
+{r period}
 
 start_date = as.Date('2021-01-01')
 end_date = as.Date('2021-12-31')
@@ -138,7 +140,8 @@ After running your algorithm, check if the trades were executed as expected. Cal
 - Invested Capital: Calculate the total capital invested. This is equal to the sum of the 'costs_proceeds' values for all 'buy' transactions. Since these entries are negative (representing money spent), you should take the negative sum of these values to reflect the total amount invested.
 - ROI Formula: $$\text{ROI} = \left( \frac{\text{Total Profit or Loss}}{\text{Total Capital Invested}} \right) \times 100$$
 
-```{r}
+```
+{r}
 profit <- round(sum(amd_df$costs_proceeds),2)
 #cost for this algorithm is simply profit minus the last entry in the costs_proceeds column
 total_cost <- profit - amd_df$costs_proceeds[nrow(amd_df)]
