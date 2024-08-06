@@ -78,6 +78,7 @@ Implement the trading algorithm as per the instructions. You should initialize n
 
 
 ```{r trading}
+
 # Initialize columns for trade type, cost/proceeds, and accumulated shares in amd_df
 amd_df$trade_type <- NA
 amd_df$costs_proceeds <- NA  # Corrected column name
@@ -139,8 +140,6 @@ After running your algorithm, check if the trades were executed as expected. Cal
 - ROI Formula: $$\text{ROI} = \left( \frac{\text{Total Profit or Loss}}{\text{Total Capital Invested}} \right) \times 100$$
 
 ```{r}
-
-
 profit <- round(sum(amd_df$costs_proceeds),2)
 #cost for this algorithm is simply profit minus the last entry in the costs_proceeds column
 total_cost <- profit - amd_df$costs_proceeds[nrow(amd_df)]
@@ -158,9 +157,6 @@ paste('The ROI from this strategy was ', as.character(ROI),'%', sep = '')
 
 
 ```{r option}
-
-
-
 average_price <- amd_df$close[1]
 total_invested <- amd_df$close[1]*100 
 shares_sold <- 0
@@ -182,7 +178,6 @@ for (k in 2:nrow(amd_df)) {
       for (m in k:nrow(amd_df)){
         amd_df$accumulated_shares[m] <- amd_df$accumulated_shares[m] - share_size
       }
-
     }
     #perform the sale operation, if statement ensures we do not sell less than 1 share
     amd_df$trade_type[k] <- "sell"
@@ -200,7 +195,6 @@ for (k in 2:nrow(amd_df)) {
       #do not affect average price when new purchases are made.
       total_invested <- 0 
     }
-    
     amd_df$costs_proceeds[k] <- shares_sold*amd_df$close[k]
     #loop updates accumulated_shares in subsequent rows to reflect the sale 
     for(c in k:nrow(amd_df)){
@@ -219,7 +213,6 @@ for (k in 2:nrow(amd_df)) {
   if(k == nrow(amd_df)){
     amd_df$costs_proceeds[k] <- amd_df$close[k]*amd_df$accumulated_shares[k] 
   }
-
 }
 #adding up all the negative values in the costs_proceeds column
 strat_total_cost <- 0 
@@ -234,7 +227,6 @@ paste('The profit from the strategy was $', Strategy_profit, sep='')
 paste('The total investment made to buy shares was $',round(-strat_total_cost,2), sep = '')
 Strat_ROI <- round((Strategy_profit/-strat_total_cost)*100, 2)
 paste('The ROI for this strategy was ',Strat_ROI,'%', sep = '')
-
 ```
 
 
