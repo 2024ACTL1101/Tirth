@@ -156,76 +156,7 @@ paste('The ROI from this strategy was ', as.character(ROI),'%', sep = '')
 
 
 ```{r option}
-average_price <- amd_df$close[1]
-total_invested <- amd_df$close[1]*100 
-shares_sold <- 0
-#initialize values for total costs and average price 
-#they have been set to the price and cost of the first day, to not trigger any 
-#immediate sell operation 
-for (k in 2:nrow(amd_df)) {
-  #first condition checks for the current price being 15% higher than average.
-  #second condition is so that after shares hit 0, the next buy operation does not
-  #trigger an immediate sale (i.e we do not buy and sell immediately on the same day).
-  #third condition is to ensure we do not sell when we have no shares.
-  if
-  (amd_df$close[k] >= 1.15*average_price && amd_df$accumulated_shares[k-1]!= 0 
-   && amd_df$accumulated_shares[k] > 0){
-    #the following if statement over-writes the buy operation in case of a sale
-    if(amd_df$trade_type[k] == "buy"){
-      #the loop removes the 100 shares previously bought from all subsequent
-      #accumulated shares values 
-      for (m in k:nrow(amd_df)){
-        amd_df$accumulated_shares[m] <- amd_df$accumulated_shares[m] - share_size
-      }
-    }
-    #perform the sale operation, if statement ensures we do not sell less than 1 share
-    amd_df$trade_type[k] <- "sell"
-    if (amd_df$accumulated_shares[k] > 1){
-      #floor function used to ensure we sell an integer number of shares 
-      shares_sold <- floor(0.5*amd_df$accumulated_shares[k])
-      #removing the amount invested in the sold shares so that the money invested in sold shares
-      #does not affect future average prices 
-      total_invested <- total_invested - shares_sold*average_price
-    }
-    else{
-      #when we have 1 share only that share is sold 
-      shares_sold <- amd_df$accumulated_shares[k]
-      #total invested is reset to 0, so that after all shares are sold, previous purchases 
-      #do not affect average price when new purchases are made.
-      total_invested <- 0 
-    }
-    amd_df$costs_proceeds[k] <- shares_sold*amd_df$close[k]
-    #loop updates accumulated_shares in subsequent rows to reflect the sale 
-    for(c in k:nrow(amd_df)){
-      amd_df$accumulated_shares[c] <- amd_df$accumulated_shares[c] - shares_sold
-    }
-    #reset shares_sold for the next iteration
-    shares_sold <- 0
-  }
-  #the following is used to update the average price every time we buy shares 
-  if(amd_df$trade_type[k] == "buy"){
-    total_invested <- total_invested + share_size*amd_df$close[k]
-    average_price <- total_invested/amd_df$accumulated_shares[k]
-  }
-  #making the sale on the last day,and updating the row to reflect the new, lower 
-  #number of shares sold on the last day compared to the last algorithm. 
-  if(k == nrow(amd_df)){
-    amd_df$costs_proceeds[k] <- amd_df$close[k]*amd_df$accumulated_shares[k] 
-  }
-}
-#adding up all the negative values in the costs_proceeds column
-strat_total_cost <- 0 
-for (l in 1:nrow(amd_df)){
-  if(amd_df$costs_proceeds[l] < 0){
-    strat_total_cost<- strat_total_cost + amd_df$costs_proceeds[l]
-  }
-}
-#calculation and output of results. 
-Strategy_profit <- round(sum(amd_df$costs_proceeds),2)
-paste('The profit from the strategy was $', Strategy_profit, sep='')
-paste('The total investment made to buy shares was $',round(-strat_total_cost,2), sep = '')
-Strat_ROI <- round((Strategy_profit/-strat_total_cost)*100, 2)
-paste('The ROI for this strategy was ',Strat_ROI,'%', sep = '')
+
 ```
 
 
@@ -235,7 +166,6 @@ paste('The ROI for this strategy was ',Strat_ROI,'%', sep = '')
 
 
 ```{r}
-```
 As a result of using the profit taking strategy where we sold shares after a 15% increase on the average price the profit declined from  538,758.93 dollars to 169189.15 dollars, while ROI dropped from 43.25% to 15.23%. 
 The main reason for this drop in ROI is that while costs dropped to 1,111,161 from 1,245,601 dollars, when using the strategy, profits dropped by a higher percentage, decreasing ROI. 
 
@@ -248,6 +178,8 @@ In the previous, more basic strategy, since all shares were sold at the end of t
 It is important to note, that while the profit-taking strategy earned lower profits and had a lower ROI, it was also significantly less risky. Had the price reduced instead of going up the profit taking strategy would have minimized losses.
 
 Alternatively, choosing a higher mark-up percentage, may have also improved the ROI of the profit-taking strategy in this case, given that AMD finished the year so strongly. 
+```
+
 
 
 
